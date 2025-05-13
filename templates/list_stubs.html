@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Daftar Stub - WireMock Wizard</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+<div class="container">
+    <h1>WireMock Wizard</h1>
+    <h2>Daftar Stub (Port: {{ session['current_port'] }})</h2>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="alert alert-{{ category }}">{{ message }}</div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+
+    {% if stubs %}
+        <table class="stub-table">
+            <thead>
+            <tr>
+                <th>Method</th>
+                <th>URL Path</th>
+                <th>Created At</th>
+                <th>Actions</th>
+            </tr>
+            </thead>
+            <tbody>
+            {% for stub in stubs %}
+                <tr>
+                    <td><strong>{{ stub.method }}</strong></td>
+                    <td><code>{{ stub.url }}</code></td>
+                    <td>{{ stub.created_at }}</td>
+                    <td>
+                        <a href="/view_stub/{{ stub.filename }}" class="action-btn btn-view">View</a>
+                        <a href="/delete_stub/{{ stub.filename }}"
+                           class="action-btn btn-delete"
+                           onclick="return confirm('Hapus stub ini?')">Delete</a>
+                        <a href="/download_stub/{{ stub.filename }}" class="action-btn btn-download">Download</a>
+                    </td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <p class="empty-message">Belum ada stub yang dibuat untuk port ini.</p>
+    {% endif %}
+
+    <div>
+        <a href="{{ url_for('index') }}" class="action-btn btn-back">Kembali ke Dashboard</a>
+    </div>
+</div>
+
+<script>
+    // Konfirmasi sebelum delete
+    document.querySelectorAll('.btn-delete').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            if (!confirm('Yakin ingin menghapus stub ini?')) {
+                e.preventDefault();
+            }
+        });
+    });
+</script>
+</body>
+</html>

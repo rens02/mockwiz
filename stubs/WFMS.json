@@ -1,0 +1,9 @@
+{
+  "request": {
+    "method": "POST",
+    "url": "/618992902/Idol-Mixes"
+  },
+  "response": {
+    "Message": "Hello World"
+  }
+}
