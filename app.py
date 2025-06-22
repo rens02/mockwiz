@@ -157,7 +157,7 @@ def generate_zip():
                         os.path.join(root, file),
                         os.path.relpath(os.path.join(root, file), wiremock_folder))
 
-        return send_file(zip_filename, as_attachment=True)
+    return send_file(zip_filename, as_attachment=True)
 
 # @app.route('/generate_zip')
 # def generate_zip():
