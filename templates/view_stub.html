@@ -35,7 +35,7 @@
     <textarea readonly>{{ response_body | tojson(indent=2) }}</textarea>
 
     <div style="margin-top: 20px;">
-        <a href="{{ url_for('list_stubs') }}" class="btn-back">⬅️ Back to Stub List</a>
+        <a href="{{ url_for('stubs.list_stubs') }}" class="btn-back">⬅️ Back to Stub List</a>
     </div>
 </div>
 </body>

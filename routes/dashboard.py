@@ -13,7 +13,7 @@ def index():
 @dash_bp.route('/dashboard')
 def dashboard():
     if 'current_port' not in session:
-        return redirect(url_for('index'))
+        return redirect(url_for('dashboard.index'))
     return render_template('dashboard.html', pesan=None)
 @dash_bp.route('/set_port', methods=['POST'])
 def set_port():
@@ -24,10 +24,10 @@ def set_port():
 
     if not port or not port.isdigit():
         flash("Port must be numeric and not empty", "error")
-        return redirect(url_for('index'))
+        return redirect(url_for('dashboard.index'))
 
     session['current_port'] = port
-    return redirect(url_for('dashboard'))
+    return redirect(url_for('dashboard.dashboard'))
 
 @dash_bp.route('/reset_port', methods=['POST'])
 def reset_port():

@@ -47,7 +47,7 @@ def add_stub():
 def list_stubs():
     if 'current_port' not in session:
         flash("Set port terlebih dahulu", "error")
-        return redirect(url_for('index'))
+        return redirect(url_for('dashboard.dashboard'))
 
     port = session['current_port']
     mappings_dir = f"wiremock_instances/{port}/mappings"
@@ -75,7 +75,7 @@ def list_stubs():
 def view_stub(filename):
     if not re.match(r'^[a-zA-Z0-9_\-]+\.json$', filename):
         flash("Nama file tidak valid", "error")
-        return redirect(url_for('list_stubs'))
+        return redirect(url_for('stubs.list_stubs'))
 
     port = session.get('current_port')
     mappings_path = f"wiremock_instances/{port}/mappings/{filename}"
@@ -102,13 +102,13 @@ def view_stub(filename):
         )
     except FileNotFoundError:
         flash("File tidak ditemukan", "error")
-        return redirect(url_for('list_stubs'))
+        return redirect(url_for('stubs.list_stubs'))
 
 @stubs_bp.route('/delete_stub/<filename>')
 def delete_stub(filename):
     if not re.match(r'^[a-zA-Z0-9_\-]+\.json$', filename):
         flash("Nama file tidak valid", "error")
-        return redirect(url_for('list_stubs'))
+        return redirect(url_for('stubs.list_stubs'))
 
     port = session['current_port']
     try:
@@ -121,7 +121,7 @@ def delete_stub(filename):
     except Exception as e:
         flash(f"Gagal menghapus stub: {str(e)}", "error")
 
-    return redirect(url_for('list_stubs'))
+    return redirect(url_for('stubs.list_stubs'))
 
 
 @stubs_bp.route('/generate_zip')
