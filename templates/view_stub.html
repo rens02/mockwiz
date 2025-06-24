@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>View Stub - {{ filename }}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <style>
+        textarea {
+            width: 100%;
+            height: 120px;
+            resize: vertical;
+        }
+        .info-box {
+            padding: 10px;
+            background-color: #ffffff;
+            border-radius: 4px;
+            margin-bottom: 15px;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h1>Stub Details: {{ filename }}</h1>
+
+    <h3>Request URL:</h3>
+    <div class="info-box">{{ request_data.urlPath or request_data.url }}</div>
+
+    <h3>Request Method:</h3>
+    <div class="info-box">{{ request_data.method }}</div>
+
+    <h3>Request Body:</h3>
+    <textarea readonly>{{ request_data.body | tojson(indent=2) if request_data.body else 'No request body.' }}</textarea>
+
+    <h3>Response Body:</h3>
+    <textarea readonly>{{ response_body | tojson(indent=2) }}</textarea>
+
+    <div style="margin-top: 20px;">
+        <a href="{{ url_for('list_stubs') }}" class="btn-back">⬅️ Back to Stub List</a>
+    </div>
+</div>
+</body>
+</html>

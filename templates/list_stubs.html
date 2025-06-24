@@ -11,6 +11,11 @@
     <h1>WireMock Wizard</h1>
     <h2>Daftar Stub (Port: {{ session['current_port'] }})</h2>
 
+    <div class="actions">
+        <button onclick="location.href='{{ url_for('dashboard') }}'" class="action-btn btn-back">⬅️ Dashboard</button>
+        <button onclick="location.href='/generate_zip'" class="action-btn btn-zip">📦 Download ZIP</button>
+    </div>
+
     {% with messages = get_flashed_messages(with_categories=true) %}
         {% if messages %}
             {% for category, message in messages %}
@@ -36,11 +41,11 @@
                     <td><code>{{ stub.url }}</code></td>
                     <td>{{ stub.created_at }}</td>
                     <td>
-                        <a href="/view_stub/{{ stub.filename }}" class="action-btn btn-view">View</a>
+                        <a href="/view_stub/{{ stub.filename }}" class="action-btn btn-view">🔍 View</a>
                         <a href="/delete_stub/{{ stub.filename }}"
                            class="action-btn btn-delete"
-                           onclick="return confirm('Hapus stub ini?')">Delete</a>
-                        <a href="/download_stub/{{ stub.filename }}" class="action-btn btn-download">Download</a>
+                           onclick="return confirm('Hapus stub ini?')">🗑️ Delete</a>
+                        <a href="/download_stub/{{ stub.filename }}" class="action-btn btn-download">⬇️ Download</a>
                     </td>
                 </tr>
             {% endfor %}
@@ -50,13 +55,9 @@
         <p class="empty-message">Belum ada stub yang dibuat untuk port ini.</p>
     {% endif %}
 
-    <div>
-        <a href="{{ url_for('index') }}" class="action-btn btn-back">Kembali ke Dashboard</a>
-    </div>
 </div>
 
 <script>
-    // Konfirmasi sebelum delete
     document.querySelectorAll('.btn-delete').forEach(btn => {
         btn.addEventListener('click', (e) => {
             if (!confirm('Yakin ingin menghapus stub ini?')) {

@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WireMock Dashboard</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+<h1>WireMock Dashboard</h1>
+
+{% if session['current_port'] %}
+    <h3>Current Port: {{ session['current_port'] }}</h3>
+
+    <div>
+        <button onclick="startWiremock()" class="btn-start">▶️ Start Wiremock</button>
+        <button onclick="stopWiremock()" class="btn-stop">⏹️ Stop Wiremock</button>
+        <button onclick="window.location.href='/list_stubs'" class="btn-view-stubs">📋 List Stubs</button>
+            <button onclick="location.href='{{ url_for('index') }}'" class="btn-stop">Go Back</button>
+
+
+    </div>
+
+    <div id="wiremockStatus"></div>
+
+    <h2>Add Stub</h2>
+    {% if pesan %}
+        <div class="alert {{ 'success' if 'berhasil' in pesan|string else 'error' }}">{{ pesan }}</div>
+    {% endif %}
+
+    <form method="POST" action="/add_stub" enctype="multipart/form-data">
+        <label for="method">Method:</label>
+        <select name="method" id="method" required>
+            <option value="GET">GET</option>
+            <option value="POST">POST</option>
+            <option value="PUT">PUT</option>
+            <option value="DELETE">DELETE</option>
+        </select><br><br>
+
+        <label for="url">URL:</label>
+        <input type="text" id="url" name="url" required><br><br>
+
+        <label for="body">Request Body (Optional):</label><br>
+        <textarea name="body" id="body" rows="10" cols="50"></textarea><br><br>
+
+        <label for="body_upload">Upload Body File (Optional):</label>
+        <input type="file" id="body_upload" name="body_upload" accept=".json, .txt"><br><br>
+
+        <label for="response_body">Response Body:</label><br>
+        <textarea name="response_body" id="response_body" rows="10" cols="50" required></textarea><br><br>
+
+        <label for="response_file">Response File Name:</label>
+        <input type="text" id="response_file" name="response_file" required><br><br>
+
+        <label for="response_upload">Upload Response File (Optional):</label>
+        <input type="file" id="response_upload" name="response_upload" accept=".json, .txt"><br><br>
+
+        <button type="submit">Add Stub</button>
+    </form>
+
+    <h2>Generate Stub ZIP</h2>
+    <form method="GET" action="/generate_zip">
+        <button type="submit">Generate and Download ZIP</button>
+    </form>
+{% else %}
+    <p>Please set the port first.</p>
+{% endif %}
+
+<script>
+    function startWiremock() {
+        fetch('/start_instance', {method: 'POST'})
+            .then(response => response.json())
+            .then(data => document.getElementById('wiremockStatus').innerText = data.message);
+    }
+
+    function stopWiremock() {
+        fetch('/stop_instance', {method: 'POST'})
+            .then(response => response.json())
+            .then(data => document.getElementById('wiremockStatus').innerText = data.message);
+    }
+
+    document.getElementById('resetPortBtn')?.addEventListener('click', () => {
+        fetch('/reset_port', {method: 'POST'})
+            .then(() => location.reload());
+    });
+
+    function handleJsonUpload(fileInputId, targetTextareaId) {
+        const fileInput = document.getElementById(fileInputId);
+        const textarea = document.getElementById(targetTextareaId);
+
+        fileInput.addEventListener('change', function () {
+            const file = fileInput.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function (e) {
+                textarea.value = e.target.result;
+            };
+            reader.readAsText(file);
+        });
+    }
+
+    handleJsonUpload('body_upload', 'body');
+    handleJsonUpload('response_upload', 'response_body');
+</script>
+
+</body>
+</html>

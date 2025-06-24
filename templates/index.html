@@ -5,93 +5,29 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>WireMock Wizard</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
-
 </head>
 <body>
 <h1>WireMock Wizard</h1>
 
-<!-- Di bagian Set Port -->
 <h2>Set Port</h2>
 <form method="POST" action="/set_port" id="portForm">
-    <label for="port">Port:</label>
-    <input
-            type="text"
-            id="port"
-            name="port"
-            required
-            {% if session['current_port'] %}
-            value="{{ session['current_port'] }}"
-            disabled
-            class="disabled-port"
-            {% endif %}
-    >
+    <label for="port">Choose Existing Port:</label>
+    <select name="port" id="port_select">
+        {% for port in ports %}
+            <option value="{{ port }}">{{ port }}</option>
+        {% endfor %}
+    </select>
 
-    {% if not session['current_port'] %}
-        <button type="submit" class="btn-set-port">Set Port</button>
-    {% else %}
-        <div class="port-actions">
-            <button type="button" id="resetPortBtn" class="btn-reset-port">
-                ↻ Reset Port
-            </button>
-            <button type="button" onclick="window.location.href='/list_stubs'" class="btn-view-stubs">
-                📋 Lihat Stub
-            </button>
-        </div>
-    {% endif %}
-</form>kagka
+    <br><br>
+    <label for="new_port">Or Enter New Port:</label>
+    <input type="text" id="new_port" name="new_port">
 
-{% if session['current_port'] %}
-    <h3>Current Port: {{ session['current_port'] }}</h3>
+    <button type="submit" class="btn-set-port">Set Port</button>
+</form>
 
-    <!-- Add Stub Form -->
-    <h2>Add Stub</h2>
-    {% if pesan %}
-        <div class="alert {{ 'success' if 'berhasil' in pesan|string else 'error' }}">
-            {{ pesan }}
-        </div>
-    {% endif %}
-    <form method="POST" action="/add_stub">
-        <label for="method">Method:</label>
-        <select name="method" id="method" required>
-            <option value="GET">GET</option>
-            <option value="POST">POST</option>
-            <option value="PUT">PUT</option>
-            <option value="DELETE">DELETE</option>
-        </select><br><br>
+<script>
+    // no JS needed since redirect will now be handled server-side
+</script>
 
-        <label for="url">URL:</label>
-        <input type="text" id="url" name="url" required><br><br>
-
-        <label for="body">Request Body (Optional):</label><br>
-        <textarea name="body" id="body" rows="10" cols="50" style="resize: none; overflow-y: scroll;"></textarea><br><br>
-
-        <label for="body_upload">Upload Body File (Optional):</label>
-        <input type="file" id="body_upload" name="body_upload" accept=".json, .txt"><br><br>
-
-        <label for="response_body">Response Body:</label><br>
-        <textarea name="response_body" id="response_body" rows="10" cols="50" style="resize: none; overflow-y: scroll;" required></textarea><br><br>
-
-        <label for="response_file">Response File Name:</label>
-        <input type="text" id="response_file" name="response_file" required><br><br>
-
-        <label for="response_upload">Upload Response File (Optional):</label>
-        <input type="file" id="response_upload" name="response_upload" accept=".json, .txt"><br><br>
-
-        <button type="submit">Add Stub</button>
-        {% if pesan %}
-            <p>{{ pesan }}</p>
-        {% endif %}
-    </form>
-
-
-    <h2>Generate Stub ZIP</h2>
-    <form method="GET" action="/generate_zip">
-        <button type="submit">Generate and Download ZIP</button>
-    </form>
-{% else %}
-    <p>Please set the port first.</p>
-{% endif %}
-
-<script src="{{ url_for('static', filename='js/script.js') }}"></script>
 </body>
 </html>
