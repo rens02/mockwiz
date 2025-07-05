@@ -57,14 +57,6 @@
 
 </div>
 
-<script>
-    document.querySelectorAll('.btn-delete').forEach(btn => {
-        btn.addEventListener('click', (e) => {
-            if (!confirm('Yakin ingin menghapus stub ini?')) {
-                e.preventDefault();
-            }
-        });
-    });
-</script>
+<script src="{{ url_for('static', filename='js/list_stubs.js') }}"></script>
 </body>
 </html>
