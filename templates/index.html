@@ -11,23 +11,19 @@
 
 <h2>Set Port</h2>
 <form method="POST" action="/set_port" id="portForm">
-    <label for="port">Choose Existing Port:</label>
+    <label for="port_select">Choose Existing Port:</label>
     <select name="port" id="port_select">
         {% for port in ports %}
             <option value="{{ port }}">{{ port }}</option>
         {% endfor %}
     </select>
 
-    <br><br>
     <label for="new_port">Or Enter New Port:</label>
     <input type="text" id="new_port" name="new_port">
 
     <button type="submit" class="btn-set-port">Set Port</button>
 </form>
 
-<script>
-    // no JS needed since redirect will now be handled server-side
-</script>
-
+<script src="{{ url_for('static', filename='js/script.js') }}"></script>
 </body>
 </html>

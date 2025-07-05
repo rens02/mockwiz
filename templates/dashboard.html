@@ -22,6 +22,11 @@
     </div>
 
     <div id="wiremockStatus"></div>
+    <div id="wiremockLogs">
+        <h3>WireMock Logs</h3>
+        <pre id="logOutput" style="background-color: #eee; padding: 10px; border-radius: 5px; max-height: 300px; overflow-y: scroll;"></pre>
+        <button onclick="getInstanceLogs()" class="btn-view">Refresh Logs</button>
+    </div>
 
     <h2>Add Stub</h2>
     {% if pesan %}
@@ -66,43 +71,8 @@
     <p>Please set the port first.</p>
 {% endif %}
 
-<script>
-    function startWiremock() {
-        fetch('/start_instance', {method: 'POST'})
-            .then(response => response.json())
-            .then(data => document.getElementById('wiremockStatus').innerText = data.message);
-    }
-
-    function stopWiremock() {
-        fetch('/stop_instance', {method: 'POST'})
-            .then(response => response.json())
-            .then(data => document.getElementById('wiremockStatus').innerText = data.message);
-    }
-
-    document.getElementById('resetPortBtn')?.addEventListener('click', () => {
-        fetch('/reset_port', {method: 'POST'})
-            .then(() => location.reload());
-    });
-
-    function handleJsonUpload(fileInputId, targetTextareaId) {
-        const fileInput = document.getElementById(fileInputId);
-        const textarea = document.getElementById(targetTextareaId);
-
-        fileInput.addEventListener('change', function () {
-            const file = fileInput.files[0];
-            if (!file) return;
-
-            const reader = new FileReader();
-            reader.onload = function (e) {
-                textarea.value = e.target.result;
-            };
-            reader.readAsText(file);
-        });
-    }
-
-    handleJsonUpload('body_upload', 'body');
-    handleJsonUpload('response_upload', 'response_body');
-</script>
+<script src="{{ url_for('static', filename='js/script.js') }}"></script>
+<script src="{{ url_for('static', filename='js/stub_utils.js') }}"></script>
 
 </body>
 </html>

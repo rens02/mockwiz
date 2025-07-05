@@ -1,25 +1,3 @@
-// Fungsi untuk mengisi textarea dengan isi file yang di-upload
-function handleFileUpload(inputId, textareaId) {
-    var fileInput = document.getElementById(inputId);
-    var textarea = document.getElementById(textareaId);
-
-    fileInput.addEventListener('change', function() {
-        var file = fileInput.files[0];
-        var reader = new FileReader();
-
-        reader.onload = function(e) {
-            textarea.value = e.target.result;  // Isi textarea dengan konten file
-        };
-
-        reader.readAsText(file);  // Membaca file sebagai teks
-    });
-}
-
-// Panggil fungsi untuk body dan response
-handleFileUpload('body_upload', 'body');
-handleFileUpload('response_upload', 'response_body');
-
-
 // Reset port handler
 document.getElementById('resetPortBtn')?.addEventListener('click', function() {
     if (confirm('Reset port ke default? Semua stub akan terhapus.')) {
@@ -38,7 +16,52 @@ document.getElementById('resetPortBtn')?.addEventListener('click', function() {
 
 // Auto-focus port field jika kosong
 window.addEventListener('DOMContentLoaded', () => {
-    if (!document.getElementById('port').value) {
-        document.getElementById('port').focus();
+    if (!document.getElementById('port')?.value) {
+        document.getElementById('new_port')?.focus();
     }
+    getInstanceStatus();
+    getInstanceLogs();
 });
+
+function startWiremock() {
+    fetch('/start_instance', {method: 'POST'})
+        .then(response => response.json())
+        .then(data => {
+            document.getElementById('wiremockStatus').innerText = data.message;
+            getInstanceStatus();
+            getInstanceLogs();
+        });
+}
+
+function stopWiremock() {
+    fetch('/stop_instance', {method: 'POST'})
+        .then(response => response.json())
+        .then(data => {
+            document.getElementById('wiremockStatus').innerText = data.message;
+            getInstanceStatus();
+            getInstanceLogs();
+        });
+}
+
+function getInstanceStatus() {
+    fetch('/get_instance_status')
+        .then(response => response.json())
+        .then(data => {
+            const statusDiv = document.getElementById('wiremockStatus');
+            if (data.running) {
+                statusDiv.innerText = `WireMock is running on port ${data.port}.`;
+                statusDiv.style.color = 'green';
+            } else {
+                statusDiv.innerText = `WireMock is not running. ${data.message || ''}`;
+                statusDiv.style.color = 'red';
+            }
+        });
+}
+
+function getInstanceLogs() {
+    fetch('/get_instance_logs')
+        .then(response => response.json())
+        .then(data => {
+            document.getElementById('logOutput').innerText = data.logs;
+        });
+}
