@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <title>View Stub - {{ filename }}</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
     <style>
         textarea {
@@ -19,24 +20,33 @@
     </style>
 </head>
 <body>
-<div class="container">
-    <h1>Stub Details: {{ filename }}</h1>
+<div class="container mt-4">
+    <h1 class="mb-4">Stub Details: <span class="text-primary">{{ filename }}</span></h1>
 
-    <h3>Request URL:</h3>
-    <div class="info-box">{{ request_data.urlPath or request_data.url }}</div>
+    <div class="mb-3">
+        <h3 class="mb-2">Request URL:</h3>
+        <div class="card card-body bg-light"><code>{{ request_data.urlPath or request_data.url }}</code></div>
+    </div>
 
-    <h3>Request Method:</h3>
-    <div class="info-box">{{ request_data.method }}</div>
+    <div class="mb-3">
+        <h3 class="mb-2">Request Method:</h3>
+        <div class="card card-body bg-light">{{ request_data.method }}</div>
+    </div>
 
-    <h3>Request Body:</h3>
-    <textarea readonly>{{ request_data.body | tojson(indent=2) if request_data.body else 'No request body.' }}</textarea>
+    <div class="mb-3">
+        <h3 class="mb-2">Request Body:</h3>
+        <textarea class="form-control" rows="10" readonly>{{ request_data.body | tojson(indent=2) if request_data.body else 'No request body.' }}</textarea>
+    </div>
 
-    <h3>Response Body:</h3>
-    <textarea readonly>{{ response_body | tojson(indent=2) }}</textarea>
+    <div class="mb-3">
+        <h3 class="mb-2">Response Body:</h3>
+        <textarea class="form-control" rows="10" readonly>{{ response_body | tojson(indent=2) }}</textarea>
+    </div>
 
-    <div style="margin-top: 20px;">
-        <a href="{{ url_for('stubs.list_stubs') }}" class="btn-back">⬅️ Back to Stub List</a>
+    <div class="mt-4">
+        <a href="{{ url_for('stubs.list_stubs') }}" class="btn btn-secondary">⬅️ Back to Stub List</a>
     </div>
 </div>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
 </body>
 </html>

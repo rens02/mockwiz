@@ -14,7 +14,13 @@ def index():
 def dashboard():
     if 'current_port' not in session:
         return redirect(url_for('dashboard.index'))
-    return render_template('dashboard.html', pesan=None)
+    return render_template('dashboard.html')
+
+@dash_bp.route('/tambah_stub')
+def tambah_stub():
+    if 'current_port' not in session:
+        return redirect(url_for('dashboard.index'))
+    return render_template('tambah_stub.html', pesan=None)
 @dash_bp.route('/set_port', methods=['POST'])
 def set_port():
     selected = request.form.get('port')
