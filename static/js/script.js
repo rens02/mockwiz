@@ -20,7 +20,7 @@ window.addEventListener('DOMContentLoaded', () => {
         document.getElementById('new_port')?.focus();
     }
     getInstanceStatus();
-    getInstanceLogs();
+    initializeLogs();
 });
 
 function startWiremock() {
@@ -29,7 +29,7 @@ function startWiremock() {
         .then(data => {
             document.getElementById('wiremockStatus').innerText = data.message;
             getInstanceStatus();
-            getInstanceLogs();
+            getInstanceLogs(); // Fetch logs immediately after starting
         });
 }
 
@@ -39,7 +39,7 @@ function stopWiremock() {
         .then(data => {
             document.getElementById('wiremockStatus').innerText = data.message;
             getInstanceStatus();
-            getInstanceLogs();
+            getInstanceLogs(); // Fetch logs immediately after stopping
         });
 }
 
@@ -58,10 +58,41 @@ function getInstanceStatus() {
         });
 }
 
+let term;
+let currentLogContent = "";
+let logPollingInterval;
+
+function initializeLogs() {
+    const terminalContainer = document.getElementById('terminal');
+    if (!terminalContainer) return;
+
+    if (!term) {
+        term = new Terminal({
+            convertEol: true,
+            rows: 15,
+            scrollback: 1000,
+        });
+        const fitAddon = new FitAddon.FitAddon();
+        term.loadAddon(fitAddon);
+        term.open(terminalContainer);
+        fitAddon.fit();
+    }
+
+    getInstanceLogs(); // Initial fetch
+    if (logPollingInterval) clearInterval(logPollingInterval); // Clear existing interval if any
+    logPollingInterval = setInterval(getInstanceLogs, 3000); // Poll every 3 seconds
+}
+
 function getInstanceLogs() {
     fetch('/get_instance_logs')
         .then(response => response.json())
         .then(data => {
-            document.getElementById('logOutput').innerText = data.logs;
+            const newLogContent = data.logs;
+            if (newLogContent !== currentLogContent) {
+                // Find the new part of the logs
+                const diff = newLogContent.substring(currentLogContent.length);
+                term.write(diff.replace(/\n/g, '\r\n'));
+                currentLogContent = newLogContent;
+            }
         });
 }

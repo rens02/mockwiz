@@ -3,7 +3,6 @@ import subprocess
 import threading
 import json
 import psutil
-import queue
 
 PID_TRACK_FILE = "wiremock_pids.json"
 from config import WIREMOCK_JAR_NAME
@@ -17,7 +16,6 @@ class WiremockManager:
         Initializes the WiremockManager, restoring any previously running processes.
         """
         self.processes: dict[str, subprocess.Popen | psutil.Process] = {}
-        self.output_queues: dict[str, queue.Queue] = {}
         self.restore_processes_on_startup()
 
     def _save_pid(self, port: str | int, pid: int) -> None:
@@ -88,13 +86,12 @@ class WiremockManager:
             json.dump(updated, f)
         return updated
 
-    def _stream_logs(self, port: str | int, q: queue.Queue, pipe) -> None:
+    def _stream_logs(self, port: str | int, pipe) -> None:
         """
-        Streams the output of a WireMock instance to a queue and a log file.
+        Streams the output of a WireMock instance to a log file.
 
         Args:
             port: The port of the WireMock instance.
-            q: The queue to stream the logs to.
             pipe: The stdout pipe of the WireMock process.
         """
         log_file_path = f'wiremock_instances/{port}/wiremock.log'
@@ -103,7 +100,7 @@ class WiremockManager:
             for line in iter(pipe.readline, b''):
                 decoded_line = line.decode().strip()
                 f.write(decoded_line + '\n')
-                q.put(decoded_line + '\n')
+                f.flush()
 
     def start_wiremock(self, port: int) -> tuple[bool, str]:
         """
@@ -135,9 +132,7 @@ class WiremockManager:
             self.processes[port_str] = process
             self._save_pid(port_str, process.pid)
 
-            q = queue.Queue()
-            self.output_queues[port_str] = q
-            threading.Thread(target=self._stream_logs, args=(port_str, q, process.stdout), daemon=True).start()
+            threading.Thread(target=self._stream_logs, args=(port_str, process.stdout), daemon=True).start()
             return True, f"Started Wiremock on port {port}."
         except Exception as e:
             return False, f"Failed to start Wiremock on port {port}: {e}"
@@ -173,8 +168,6 @@ class WiremockManager:
         self._remove_pid(port_str)
         if port_str in self.processes:
             del self.processes[port_str]
-        if port_str in self.output_queues:
-            del self.output_queues[port_str]
         return True, f"Stopped WireMock on port {port}."
 
     def is_running(self, port: int) -> bool:
@@ -207,25 +200,22 @@ class WiremockManager:
             try:
                 proc = psutil.Process(pid)
                 self.processes[port] = proc
-                self.output_queues[port] = queue.Queue()
             except (psutil.NoSuchProcess, psutil.AccessDenied):
                 self._remove_pid(port)
 
     def get_log_output(self, port: int) -> str:
         """
-        Retrieves the latest log output for a WireMock instance.
+        Retrieves the log output for a WireMock instance from its log file.
 
         Args:
             port: The port of the WireMock instance.
 
         Returns:
-            The latest log output as a string.
+            The log output as a string, or an error message if the file doesn't exist.
         """
         port_str = str(port)
-        if port_str in self.output_queues:
-            q = self.output_queues[port_str]
-            lines = []
-            while not q.empty():
-                lines.append(q.get_nowait())
-            return "".join(lines)
-        return ""
+        log_file_path = f'wiremock_instances/{port_str}/wiremock.log'
+        if os.path.exists(log_file_path):
+            with open(log_file_path, 'r') as f:
+                return f.read()
+        return f"Log file not found for port {port_str}."
