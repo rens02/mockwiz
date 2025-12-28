@@ -13,8 +13,8 @@
     <h2 class="mb-3">Port: {{ session['current_port'] }}</h2>
 
     <div class="d-flex justify-content-start mb-4">
-        <a href="/generate_zip" class="btn btn-info me-2">📦 Download ZIP</a> <br>
-        <a href="tambah_stub" class="btn btn-info">➕ Tambah Request</a>
+        <a href="/generate_zip" class="btn btn-info me-2" aria-label="Download all stubs as a ZIP file">📦 Download ZIP</a> <br>
+        <a href="tambah_stub" class="btn btn-info" aria-label="Add a new request">➕ Tambah Request</a>
     </div>
 
     {% with messages = get_flashed_messages(with_categories=true) %}
@@ -46,11 +46,12 @@
                         <td><code>{{ stub.url }}</code></td>
                         <td>{{ stub.created_at }}</td>
                         <td>
-                            <a href="/view_stub/{{ stub.filename }}" class="btn btn-sm btn-primary me-1">🔍 View</a>
+                            <a href="/view_stub/{{ stub.filename }}" class="btn btn-sm btn-primary me-1" aria-label="View stub {{ stub.filename }}">🔍 View</a>
                             <a href="/delete_stub/{{ stub.filename }}"
                                class="btn btn-sm btn-danger me-1"
-                               onclick="return confirm('Hapus stub ini?')">🗑️ Delete</a>
-                            <a href="/download_stub/{{ stub.filename }}" class="btn btn-sm btn-secondary">⬇️ Download</a>
+                               onclick="return confirm('Hapus stub ini?')"
+                               aria-label="Delete stub {{ stub.filename }}">🗑️ Delete</a>
+                            <a href="/download_stub/{{ stub.filename }}" class="btn btn-sm btn-secondary" aria-label="Download stub {{ stub.filename }}">⬇️ Download</a>
                         </td>
                     </tr>
                 {% endfor %}
