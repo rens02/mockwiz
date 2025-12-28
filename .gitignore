@@ -5,4 +5,5 @@ __pycache__/
 *.pyd
 
 # Log files
+# Logs
 *.log

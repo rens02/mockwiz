@@ -12,12 +12,22 @@ import signal
 WIREMOCK_JAR_PATH = f"static/wiremock/{WIREMOCK_JAR_NAME}"
 
 class WiremockManager:
-    def __init__(self):
-        self.processes = {}  # {port: process_object}
-        self.output_queues = {} # {port: queue.Queue()}
+    def __init__(self) -> None:
+        """
+        Initializes the WiremockManager, restoring any previously running processes.
+        """
+        self.processes: dict[str, subprocess.Popen | psutil.Process] = {}
+        self.output_queues: dict[str, queue.Queue] = {}
         self.restore_processes_on_startup()
 
-    def _save_pid(self, port, pid):
+    def _save_pid(self, port: str | int, pid: int) -> None:
+        """
+        Saves the PID of a WireMock instance to the tracking file.
+
+        Args:
+            port: The port of the WireMock instance.
+            pid: The PID of the WireMock process.
+        """
         pids = {}
         if os.path.exists(PID_TRACK_FILE):
             with open(PID_TRACK_FILE, 'r') as f:
@@ -26,7 +36,13 @@ class WiremockManager:
         with open(PID_TRACK_FILE, 'w') as f:
             json.dump(pids, f)
 
-    def _remove_pid(self, port):
+    def _remove_pid(self, port: str | int) -> None:
+        """
+        Removes the PID of a WireMock instance from the tracking file.
+
+        Args:
+            port: The port of the WireMock instance to remove.
+        """
         if not os.path.exists(PID_TRACK_FILE):
             return
         with open(PID_TRACK_FILE, 'r') as f:
@@ -36,13 +52,25 @@ class WiremockManager:
         with open(PID_TRACK_FILE, 'w') as f:
             json.dump(pids, f)
 
-    def _get_pids(self):
+    def _get_pids(self) -> dict[str, int]:
+        """
+        Retrieves the PIDs of all tracked WireMock instances.
+
+        Returns:
+            A dictionary mapping port numbers to PIDs.
+        """
         if not os.path.exists(PID_TRACK_FILE):
             return {}
         with open(PID_TRACK_FILE, 'r') as f:
             return json.load(f)
 
-    def _cleanup_dead_pids(self):
+    def _cleanup_dead_pids(self) -> dict[str, int]:
+        """
+        Removes dead PIDs from the tracking file.
+
+        Returns:
+            A dictionary of the remaining running process PIDs.
+        """
         if not os.path.exists(PID_TRACK_FILE):
             return {}
         with open(PID_TRACK_FILE, 'r') as f:
@@ -60,7 +88,15 @@ class WiremockManager:
             json.dump(updated, f)
         return updated
 
-    def _stream_logs(self, port, q, pipe):
+    def _stream_logs(self, port: str | int, q: queue.Queue, pipe) -> None:
+        """
+        Streams the output of a WireMock instance to a queue and a log file.
+
+        Args:
+            port: The port of the WireMock instance.
+            q: The queue to stream the logs to.
+            pipe: The stdout pipe of the WireMock process.
+        """
         log_file_path = f'wiremock_instances/{port}/wiremock.log'
         os.makedirs(os.path.dirname(log_file_path), exist_ok=True)
         with open(log_file_path, 'a') as f:
@@ -69,10 +105,19 @@ class WiremockManager:
                 f.write(decoded_line + '\n')
                 q.put(decoded_line + '\n')
 
-    def start_wiremock(self, port):
+    def start_wiremock(self, port: int) -> tuple[bool, str]:
+        """
+        Starts a new WireMock instance on the specified port.
+
+        Args:
+            port: The port number to start WireMock on.
+
+        Returns:
+            A tuple containing a boolean indicating success and a message.
+        """
         port_str = str(port)
         if port_str in self.processes and self.processes[port_str].poll() is None:
-            return False, f"Wiremock is already running on port {port}."
+            return False, f"WireMock is already running on port {port}."
 
         wiremock_dir = f'wiremock_instances/{port}'
         os.makedirs(wiremock_dir, exist_ok=True)
@@ -97,69 +142,85 @@ class WiremockManager:
         except Exception as e:
             return False, f"Failed to start Wiremock on port {port}: {e}"
 
-    # def stop_wiremock(self, port):
-    #     port_str = str(port)
-    #     process = self.processes.get(port_str)
-    #     if process:
-    #         os.kill(process.pid, signal.CTRL_BREAK_EVENT)
-    #         try:
-    #             # Terminate the entire process group
-    #             process.wait(timeout=5)
-    #         except subprocess.TimeoutExpired:
-    #             # If it doesn't terminate, kill the entire process group forcefully
-    #             process.kill()
-    #             process.wait(timeout=5)
-    #         self._remove_pid(port_str)
-    #         del self.processes[port_str]
-    #         if port_str in self.output_queues:
-    #             del self.output_queues[port_str]
-    #         return True, f"Stopped Wiremock on port {port}."
-    #     return False, "No running instance found for this port."
+    def stop_wiremock(self, port: int) -> tuple[bool, str]:
+        """
+        Stops the WireMock instance on the specified port.
 
-    def stop_wiremock(self, port):
+        Args:
+            port: The port number of the WireMock instance to stop.
+
+        Returns:
+            A tuple containing a boolean indicating success and a message.
+        """
         port_str = str(port)
         process = self.processes.get(port_str)
-        if process:
-            try:
-                # Use psutil to get the full process tree and kill all children
-                parent = psutil.Process(process.pid)
-                children = parent.children(recursive=True)
-                for child in children:
-                    child.kill()
-                parent.kill()
+        if not process:
+            return False, "No running instance found for this port."
 
-                parent.wait(5)
-            except Exception as e:
-                return False, f"Error stopping WireMock on port {port}: {e}"
+        try:
+            parent = psutil.Process(process.pid)
+            children = parent.children(recursive=True)
+            for child in children:
+                child.kill()
+            parent.kill()
+            parent.wait(5)
+        except psutil.NoSuchProcess:
+            # Process already killed.
+            pass
+        except Exception as e:
+            return False, f"Error stopping WireMock on port {port}: {e}"
 
-            self._remove_pid(port_str)
+        self._remove_pid(port_str)
+        if port_str in self.processes:
             del self.processes[port_str]
-            if port_str in self.output_queues:
-                del self.output_queues[port_str]
-            return True, f"Stopped WireMock on port {port}."
+        if port_str in self.output_queues:
+            del self.output_queues[port_str]
+        return True, f"Stopped WireMock on port {port}."
 
-        return False, "No running instance found for this port."
+    def is_running(self, port: int) -> bool:
+        """
+        Checks if a WireMock instance is currently running on the specified port.
 
-    def is_running(self, port):
+        Args:
+            port: The port to check.
+
+        Returns:
+            True if an instance is running, False otherwise.
+        """
         port_str = str(port)
-        return port_str in self.processes and self.processes[port_str].poll() is None
+        process = self.processes.get(port_str)
+        if not process:
+            return False
 
-    def restore_processes_on_startup(self):
+        if isinstance(process, subprocess.Popen):
+            return process.poll() is None
+        elif isinstance(process, psutil.Process):
+            return process.is_running()
+        return False
+
+    def restore_processes_on_startup(self) -> None:
+        """
+        Restores the state of running WireMock processes on application startup.
+        """
         pids = self._cleanup_dead_pids()
         for port, pid in pids.items():
             try:
                 proc = psutil.Process(pid)
                 self.processes[port] = proc
-                # Re-attach log streaming if possible, or at least acknowledge the process
-                q = queue.Queue()
-                self.output_queues[port] = q
-                # Note: Cannot easily re-attach to stdout of an already running process
-                # For now, just acknowledge it's running.
+                self.output_queues[port] = queue.Queue()
             except (psutil.NoSuchProcess, psutil.AccessDenied):
-                self._remove_pid(port) # Clean up if process is truly gone
-                pass
+                self._remove_pid(port)
 
-    def get_log_output(self, port):
+    def get_log_output(self, port: int) -> str:
+        """
+        Retrieves the latest log output for a WireMock instance.
+
+        Args:
+            port: The port of the WireMock instance.
+
+        Returns:
+            The latest log output as a string.
+        """
         port_str = str(port)
         if port_str in self.output_queues:
             q = self.output_queues[port_str]
